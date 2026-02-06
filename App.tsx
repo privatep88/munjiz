@@ -468,15 +468,20 @@ const App: React.FC = () => {
     }
   };
   
-  // Handle Snooze (Add 15 minutes) - Used by Alert Modal
+  // Handle Snooze (Open Snooze/Customize Modal) - Updated Logic
   const handleSnooze = (taskId: string) => {
-    const newDate = new Date();
-    newDate.setMinutes(newDate.getMinutes() + 15);
-    const newDateStr = new Date(newDate.getTime() - newDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-    
-    setTasks(prev => prev.map(t => 
-       t.id === taskId ? { ...t, customReminderDate: newDateStr } : t
-    ));
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    // Open the full customization modal instead of immediate 15 min snooze
+    setSnoozeModalConfig({
+      isOpen: true,
+      notificationId: `popup-alert-${Date.now()}`, // Dummy ID, purely for state flow
+      taskId: taskId,
+      taskTitle: task.title
+    });
+
+    // Close the reminder popup
     setReminderModalData(null);
   };
 
@@ -487,7 +492,8 @@ const App: React.FC = () => {
       t.id === taskId ? { ...t, customReminderDate: snoozeDate } : t
     ));
 
-    // 2. Mark this notification as read/handled
+    // 2. Mark this notification as read/handled (if it exists)
+    // Note: If coming from popup alert, the ID might be temporary, which is fine
     markAsRead(notificationId);
     
     // 3. Play sound feedback

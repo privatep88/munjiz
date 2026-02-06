@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Bell, X, Clock, CheckCircle2, AlertCircle, Ban } from 'lucide-react';
+import { Bell, X, Clock, CheckCircle2, AlertCircle, Ban, Settings2 } from 'lucide-react';
 
 interface ReminderModalProps {
   isOpen: boolean;
@@ -57,8 +57,8 @@ const ReminderModal: React.FC<ReminderModalProps> = ({ isOpen, data, onClose, on
               }}
               className="flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95"
             >
-              <Clock size={18} />
-              <span>تأجيل</span>
+              <Settings2 size={18} />
+              <span>تخصيص/تأجيل</span>
             </button>
             
             <button
