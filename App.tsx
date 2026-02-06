@@ -11,7 +11,9 @@ import NotificationsPopup from './components/NotificationsPopup';
 import ReminderModal from './components/ReminderModal';
 import SnoozeModal from './components/SnoozeModal';
 import TaskDetailsModal from './components/TaskDetailsModal';
-import { View, Task, Notification } from './types';
+import Login from './components/Login';
+// Fix: Use 'import type' and rename Notification to AppNotification to avoid collision with global Notification constructor
+import type { View, Task, Notification as AppNotification } from './types'; 
 import { Bell, Menu, Search, User } from 'lucide-react';
 import { sendEmailReminder, sendManualTaskDetails } from './services/emailService';
 
@@ -100,6 +102,9 @@ const safeSetItem = (key: string, value: any) => {
 };
 
 const App: React.FC = () => {
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(() => safeGetItem('munjiz_auth_v1', false));
+
   // Settings State with Persistence
   const [userName, setUserName] = useState(() => safeGetItem('settings_userName_v3', 'Aljefre'));
   const [jobTitle, setJobTitle] = useState(() => safeGetItem('settings_jobTitle_v1', 'Senior Officer'));
@@ -122,7 +127,7 @@ const App: React.FC = () => {
   });
 
   // Data Persistence: Notifications
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     const savedNotifications = safeGetItem('munjiz_notifications_data_v1', null);
     if (savedNotifications && Array.isArray(savedNotifications)) {
       // Restore Date objects from strings
@@ -222,6 +227,8 @@ const App: React.FC = () => {
 
   // Check Reminders Logic
   useEffect(() => {
+    if (!isAuthenticated) return; // Don't check reminders if not logged in
+
     const interval = setInterval(() => {
       checkReminders();
     }, 30000); // Check every 30 seconds for better responsiveness
@@ -229,7 +236,7 @@ const App: React.FC = () => {
     checkReminders(); // Initial check
 
     return () => clearInterval(interval);
-  }, [tasks, reminderTime]);
+  }, [tasks, reminderTime, isAuthenticated]);
 
   const checkReminders = async () => {
     const todayStr = getLocalDateString();
@@ -254,6 +261,7 @@ const App: React.FC = () => {
 
           if (!alreadyNotified) {
              if (inAppNotificationsEnabled) playNotificationSound();
+             // Use window.Notification to refer to Browser API, avoiding collision with type import
              if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('تذكير مخصص 🔔', { body: `حان موعد: ${task.title}` });
              }
@@ -493,7 +501,7 @@ const App: React.FC = () => {
   };
 
   // Open the global Snooze Modal
-  const openSnoozeModal = (notification: Notification) => {
+  const openSnoozeModal = (notification: AppNotification) => {
     if (!notification.taskId) return;
     setSnoozeModalConfig({
       isOpen: true,
@@ -509,6 +517,19 @@ const App: React.FC = () => {
     if (task) {
       setGlobalViewingTask(task);
     }
+  };
+
+  const handleLogin = (name: string) => {
+    setUserName(name);
+    setIsAuthenticated(true);
+    safeSetItem('settings_userName_v3', name);
+    safeSetItem('munjiz_auth_v1', true);
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    safeSetItem('munjiz_auth_v1', false);
+    // Optional: clear notifications on logout or keep them
   };
 
   useEffect(() => {
@@ -665,6 +686,10 @@ const App: React.FC = () => {
     }
   };
 
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="flex h-[100dvh] bg-slate-50 font-sans" dir="rtl">
       {isMobileMenuOpen && (
@@ -679,6 +704,7 @@ const App: React.FC = () => {
           currentView={currentView} 
           setCurrentView={(v) => { setCurrentView(v); setIsMobileMenuOpen(false); }}
           toggleAI={() => { setIsAIOpen(true); setIsMobileMenuOpen(false); }}
+          onLogout={handleLogout}
           unreadCount={unreadCount}
           taskCounts={taskStats}
         />

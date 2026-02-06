@@ -2,6 +2,11 @@ import React, { ReactNode, ErrorInfo } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
+// Polyfill process.env for browser environments to avoid "process is not defined" error
+if (typeof window !== 'undefined' && !(window as any).process) {
+  (window as any).process = { env: { API_KEY: '' } };
+}
+
 // Global error handler for non-React errors (e.g. script load failures)
 window.addEventListener('error', (e) => {
   console.error('Global Application Error:', e.error);
@@ -73,7 +78,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       );
     }
 
-    return this.props.children;
+    return (this as any).props.children;
   }
 }
 
