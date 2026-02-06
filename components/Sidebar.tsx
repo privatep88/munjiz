@@ -6,7 +6,6 @@ interface SidebarProps {
   currentView: View;
   setCurrentView: (view: View) => void;
   toggleAI: () => void;
-  onLogout?: () => void;
   unreadCount?: number;
   taskCounts: {
     total: number;
@@ -15,7 +14,7 @@ interface SidebarProps {
   };
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, toggleAI, onLogout, unreadCount = 0, taskCounts }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, toggleAI, unreadCount = 0, taskCounts }) => {
   const navItems: { id: View; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: 'لوحة المهام', icon: <LayoutDashboard size={20} /> },
     { id: 'tasks', label: 'المهام', icon: <CheckSquare size={20} /> },
@@ -102,18 +101,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, toggleAI
           </li>
         </ul>
       </nav>
-
-      {onLogout && (
-        <div className="p-4 border-t border-slate-800">
-          <button 
-            onClick={onLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-900/10 rounded-xl transition-colors text-sm font-medium"
-          >
-            <LogOut size={18} />
-            <span>تسجيل الخروج</span>
-          </button>
-        </div>
-      )}
     </aside>
   );
 };
